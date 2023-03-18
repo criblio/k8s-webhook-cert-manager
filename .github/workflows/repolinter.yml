@@ -15,7 +15,7 @@ jobs:
     steps:
       - name: Test Default Branch
         id: default-branch
-        uses: actions/github-script@v2
+        uses: actions/github-script@v3
         with:
           script: |
             const data = await github.repos.get(context.repo)
@@ -26,6 +26,3 @@ jobs:
       - name: Run Repolinter
         if: ${{ steps.default-branch.outputs.result == 'true' }}
         uses: newrelic/repolinter-action@v1
-        with:
-          config_url: https://raw.githubusercontent.com/newrelic/.github/main/repolinter-rulesets/community-plus.yml
-          output_type: issue

@@ -11,21 +11,24 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        k8s-version: [ "v1.15.12", "v1.16.15", "v1.17.17", "v1.18.16", "v1.19.8", "v1.20.4" ]
+        k8s-version: [ "1.23.15", "1.24.12", "1.25.8", "1.26.1" ]
     env:
       DOCKER_BUILDKIT: '1' # Setting DOCKER_BUILDKIT=1 ensures TARGETOS and TARGETARCH are populated
     steps:
-      - uses: actions/checkout@v2
-      - uses: manusa/actions-setup-minikube@v2.3.0
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Setup Minikube
+        uses: manusa/actions-setup-minikube@v2.3.0
         with:
-          minikube version: v1.17.1
+          minikube version: 'v1.29.0'
           kubernetes version: ${{ matrix.k8s-version }}
           driver: docker
+          start args: '--force'
       - name: Run e2e test
         continue-on-error: ${{ contains(matrix.k8s-version, '1.20') }} # experimental support for 1.20.x
         run: |
           # make minikube use local docker registry
           eval $(minikube -p minikube docker-env)
 
-          # createa docker image and use it in minikube
+          # create a docker image and use it in minikube
           DOCKER_IMAGE_TAG=e2e-test make e2e-test
