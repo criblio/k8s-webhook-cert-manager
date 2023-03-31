@@ -21,6 +21,7 @@ The following flags are required.
     --namespace        Namespace where webhook service and secret reside.
     --secret           Secret name for CA certificate and server certificate/key pair.
 The following flags are optional.
+    --signer-name      Signer name for CA certificate (defaults to "kubernetes.io/kubelet-serving")
     --webhook-kind     Webhook kind, either MutatingWebhookConfiguration or
                        ValidatingWebhookConfiguration (defaults to MutatingWebhookConfiguration)
 EOF
@@ -43,6 +44,10 @@ while [ $# -gt 0 ]; do
           ;;
       --namespace)
           namespace="$2"
+          shift
+          ;;
+      --signer-name)
+          signerName="$2"
           shift
           ;;
       --webhook-kind)
@@ -102,7 +107,8 @@ openssl genrsa -out "${tmpdir}/server-key.pem" 2048
 openssl req -new -key "${tmpdir}/server-key.pem" -subj "/O=system:nodes/CN=system:node:${fullServiceDomain}" -out "${tmpdir}/server.csr" -config "${tmpdir}/csr.conf"
 
 csrName=${service}.${namespace}
-echo "INFO: Creating csr: ${csrName} "
+csrSignerName="${signerName:-kubernetes.io/kubelet-serving}"
+echo "INFO: Creating csr: ${csrName}, signername: ${csrSignerName}"
 set +e
 
 # clean-up any previously created CSR for our service. Ignore errors if not present.
@@ -124,7 +130,7 @@ spec:
   groups:
   - system:authenticated
   request: $(base64 < "${tmpdir}/server.csr" | tr -d '\n')
-  signerName: kubernetes.io/kubelet-serving
+  signerName: ${csrSignerName}
   usages:
   - digital signature
   - key encipherment
