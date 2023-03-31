@@ -25,7 +25,7 @@ jobs:
           driver: docker
           start args: '--force'
       - name: Run e2e test
-        continue-on-error: 'true'
+        continue-on-error: true
         run: |
           # make minikube use local docker registry
           eval $(minikube -p minikube docker-env)
